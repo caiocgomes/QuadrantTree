@@ -1,4 +1,4 @@
-poihash
-=======
+kd-Trees
+========
 
-PoiHash
+some sample code on kd-trees
