@@ -1,48 +1,11 @@
-import Math.Statistics
 import Control.Monad.Mersenne.Random
 import System.Random.Mersenne.Pure64
 import Control.Monad
 import Control.Parallel
+import Tree
+import DrawTree
 
-data Tree a = Branch a [Tree a] deriving (Eq)
 data Quadrant = First | Second | Third | Fourth deriving(Eq)
-
-instance Monad Tree where
-    return x = Branch x []
-    (Branch x subtrees) >>= f = Branch y (subtrees1 ++ subtrees2)
-                where (Branch y subtrees2)  = f x
-                      subtrees1 = map (>>= f) subtrees
-
-instance Functor Tree where
-    fmap f (Branch x subtrees) = Branch (f x) (map (fmap f) subtrees)
-
-instance (Show a) => Show (Tree a) where
-    show = unlines . draw
-
--- Drawing Trees
-draw :: (Show a) => Tree a -> [String]
-draw (Branch contents []) = [show contents]
-draw (Branch contents subtrees) = (show contents) : drawSubTrees subtrees
-
-drawSubTrees :: Show a => [Tree a] -> [String]
-drawSubTrees [] = []
-drawSubTrees [t] = "|" : shift "`- " "   " (draw t)
-drawSubTrees (t:ts) = "|" : shift "+- " "|  " (draw t) ++ drawSubTrees ts
-
-shift :: [a] -> [a] -> [[a]] -> [[a]]
-shift first other = zipWith (++) (first : repeat other)
-
-depth (Branch  _ []) = 0
-depth (Branch  _ subtrees) = 1 + maximum (map depth subtrees)
-
--- 1D Hash
-tree1d :: Tree [Double]
-tree1d = Branch [1,2,3,4,5,6,7,8] []
-
-sprout1d :: (Floating a, Ord a) => [a] -> Tree [a]
-sprout1d [] = Branch [] []
-sprout1d [x] = Branch [x] []
-sprout1d xs = let avg = median xs in  Branch [avg] [Branch (filter (>avg) xs) [], Branch (filter (<=avg) xs) []]
 
 -- 2d Hash
 quadrant :: (Ord a, Ord b) => (a, b) -> (a, b) -> Quadrant
@@ -94,5 +57,5 @@ getTree n points = tree >>= sprout2d where tree = getTree (n-1) points
 main = do pureMT <- newPureMT
           let points = evalRandom (replicateM 100 normal) pureMT
           let tree = getTree 15 points
-          print $ tree
+          print $ draw tree
 
